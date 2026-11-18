@@ -17,7 +17,7 @@ Data is kept **in memory** (4 seeded employees), so every restart resets it.
 
 ```bash
 git clone https://github.com/mostafasamy999/hr-api.git
-cd hr-api
+cd /Users/mostafasamy/learn/hr-api
 dotnet run
 ```
 
