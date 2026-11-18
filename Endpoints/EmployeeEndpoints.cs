@@ -43,7 +43,8 @@ public static class EmployeeEndpoints
         group.MapPut("/{id:int}", Update);
         group.MapDelete("/{id:int}", Delete);
         group.MapPost("/{id:int}/promote", Promote);
-
+        group.MapGet("/count", GetCount);
+        
         // Small endpoints can be inline lambdas. Parameters are bound by convention:
         //   simple type + name in route  -> route,   simple type otherwise -> query string
         //   registered service           -> DI,      complex type          -> JSON body
@@ -86,6 +87,15 @@ public static class EmployeeEndpoints
 
         return TypedResults.Ok(await service.GetAllAsync(query, ct));
     }
+
+    static async Task<Results<Ok<CountResponse>, NotFound>> GetCount(
+        IEmployeeService service, CancellationToken ct)
+    {
+        var query = new EmployeeQuery(null, null, 1, 1);
+        var result = await service.GetAllAsync(query, ct);
+        return TypedResults.Ok(new CountResponse(result.Total));
+    }
+        
 
     // ------------------------------------------------------------
     // GET /api/minimal/employees/5

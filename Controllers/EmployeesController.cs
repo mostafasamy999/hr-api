@@ -22,7 +22,7 @@ namespace HrApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-[ServiceFilter(typeof(TimingFilter))]              // runs before/after EVERY action in this class
+[ServiceFilter(typeof(TimingFilter))] // runs before/after EVERY action in this class
 public class EmployeesController(IEmployeeService service, ILogger<EmployeesController> logger) : ControllerBase
 {
     // ↑ primary constructor (C# 12): DI injects IEmployeeService and ILogger automatically.
@@ -34,14 +34,14 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     // [FromQuery] on a complex type -> binds each property from the query string.
     // ActionResult<T> = "either a T (200 OK) or any other result like NotFound()".
     [HttpGet]
-    [ProducesResponseType<PagedResponse<EmployeeResponse>>(StatusCodes.Status200OK)]   // documents OpenAPI
+    [ProducesResponseType<PagedResponse<EmployeeResponse>>(StatusCodes.Status200OK)] // documents OpenAPI
     public async Task<ActionResult<PagedResponse<EmployeeResponse>>> GetAll(
-        [FromQuery] EmployeeQuery query, CancellationToken ct)   // ct: cancelled if the client disconnects
+        [FromQuery] EmployeeQuery query, CancellationToken ct) // ct: cancelled if the client disconnects
     {
         if (query.Page < 1 || query.PageSize is < 1 or > 100)
             return BadRequest("page must be >= 1 and pageSize between 1 and 100");
 
-        return await service.GetAllAsync(query, ct);   // implicit conversion T -> 200 OK
+        return await service.GetAllAsync(query, ct); // implicit conversion T -> 200 OK
     }
 
     // ------------------------------------------------------------
@@ -56,6 +56,16 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     {
         var employee = await service.GetByIdAsync(id, ct);
         return employee is null ? NotFound() : Ok(employee);
+    }
+
+    [HttpGet("count")]
+    [ProducesResponseType<CountResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CountResponse>> GetEmployeesCount(CancellationToken ct)
+    {
+        var query = new EmployeeQuery(Department: null, Search: null, Page: 1, PageSize: 1);
+        var result = await service.GetAllAsync(query, ct);
+        return new CountResponse(result.Total);
     }
 
     // ------------------------------------------------------------
@@ -89,7 +99,8 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     [HttpPut("{id:int}")]
     [ProducesResponseType<EmployeeResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<EmployeeResponse>> Update(int id, UpdateEmployeeRequest request, CancellationToken ct)
+    public async Task<ActionResult<EmployeeResponse>> Update(int id, UpdateEmployeeRequest request,
+        CancellationToken ct)
     {
         var updated = await service.UpdateAsync(id, request, ct);
         return updated is null ? NotFound() : Ok(updated);
@@ -126,7 +137,8 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     //   [FromServices] pull a service from DI just for this action
     [HttpGet("whoami")]
     public IActionResult WhoAmI(
-        [FromHeader(Name = "X-Client-Version")] string? clientVersion,
+        [FromHeader(Name = "X-Client-Version")]
+        string? clientVersion,
         [FromQuery] string lang = "en",
         [FromServices] IWebHostEnvironment env = null!)
     {
@@ -145,6 +157,6 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     // GET /api/employees/boom   -> unhandled exception -> global handler -> 500 ProblemDetails
     // ------------------------------------------------------------
     [HttpGet("boom")]
-    [ApiExplorerSettings(IgnoreApi = true)]   // hide from OpenAPI docs
+    [ApiExplorerSettings(IgnoreApi = true)] // hide from OpenAPI docs
     public IActionResult Boom() => throw new InvalidOperationException("Payroll database is down");
 }

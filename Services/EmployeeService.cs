@@ -23,10 +23,10 @@ public class InMemoryEmployeeService : IEmployeeService
 {
     private readonly List<Employee> _db =
     [
-        new() { Id = 1, Name = "Ali",   Email = "ali@corp.com",   Department = "Mobile",  Salary = 15_000m, HiredOn = new(2023, 3, 1),  PasswordHash = "x" },
-        new() { Id = 2, Name = "Sara",  Email = "sara@corp.com",  Department = "HR",      Salary = 12_000m, HiredOn = new(2022, 7, 15), PasswordHash = "x" },
-        new() { Id = 3, Name = "Omar",  Email = "omar@corp.com",  Department = "Backend", Salary = 18_000m, HiredOn = new(2021, 1, 10), PasswordHash = "x" },
-        new() { Id = 4, Name = "Salma", Email = "salma@corp.com", Department = "Mobile",  Salary = 16_000m, HiredOn = new(2024, 9, 5),  PasswordHash = "x" },
+        new() { Id = 1, Name = "Ali",   Email = "ali@corp.com",   Department = "Mobile",  Salary = 15_000m, HiredOn = new(2023, 3, 1),  PasswordHash = "Admin@123" },
+        new() { Id = 2, Name = "Sara",  Email = "sara@corp.com",  Department = "HR",      Salary = 12_000m, HiredOn = new(2022, 7, 15), PasswordHash = "Admin@123" },
+        new() { Id = 3, Name = "Omar",  Email = "omar@corp.com",  Department = "Backend", Salary = 18_000m, HiredOn = new(2021, 1, 10), PasswordHash = "Admin@123" },
+        new() { Id = 4, Name = "Salma", Email = "salma@corp.com", Department = "Mobile",  Salary = 16_000m, HiredOn = new(2024, 9, 5),  PasswordHash = "Admin@123" },
     ];
     private int _nextId = 5;
     private readonly Lock _gate = new();

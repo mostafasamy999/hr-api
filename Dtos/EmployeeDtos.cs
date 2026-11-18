@@ -26,6 +26,7 @@ public record PromoteRequest([Range(1, 100)] int RaisePercent, string? NewDepart
 // No PasswordHash. Salary is included here, but you could make a separate "public" DTO without it.
 public record EmployeeResponse(int Id, string Name, string Number, string Email, string Department, decimal Salary, DateOnly HiredOn);
 
+public record CountResponse(int Count);
 public record PagedResponse<T>(IReadOnlyList<T> Items, int Page, int PageSize, int Total)
 {
     public int TotalPages => (int)Math.Ceiling(Total / (double)PageSize);
