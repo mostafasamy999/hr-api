@@ -1,0 +1,105 @@
+### Click "Send Request" above each block (VS Code REST Client / Rider / Visual Studio)
+@HrApi_HostAddress = http://localhost:5206
+
+### List (filter + paging)
+GET {{HrApi_HostAddress}}/api/employees?department=mobile&page=1&pageSize=10
+
+### Search by name
+GET {{HrApi_HostAddress}}/api/employees?search=a&pageSize=2
+
+### Get one
+GET {{HrApi_HostAddress}}/api/employees/1
+
+### Not found -> 404
+GET {{HrApi_HostAddress}}/api/employees/999
+
+### Route constraint: "abc" is not an int -> 404
+GET {{HrApi_HostAddress}}/api/employees/abc
+
+### Create -> 201 + Location header
+POST {{HrApi_HostAddress}}/api/employees
+Content-Type: application/json
+
+{ "name": "Mona", "email": "mona@corp.com", "department": "Design", "salary": 14000 }
+
+### Create invalid -> automatic 400 (validation)
+POST {{HrApi_HostAddress}}/api/employees
+Content-Type: application/json
+
+{ "name": "M", "email": "not-an-email", "department": "", "salary": 5 }
+
+### Duplicate email -> 409
+POST {{HrApi_HostAddress}}/api/employees
+Content-Type: application/json
+
+{ "name": "Ali Two", "email": "ali@corp.com", "department": "Mobile", "salary": 9000 }
+
+### Update
+PUT {{HrApi_HostAddress}}/api/employees/2
+Content-Type: application/json
+
+{ "name": "Sara Ahmed", "department": "HR", "salary": 13000 }
+
+### Promote (custom action)
+POST {{HrApi_HostAddress}}/api/employees/1/promote
+Content-Type: application/json
+
+{ "raisePercent": 10, "newDepartment": "Team Lead" }
+
+### Delete -> 204
+DELETE {{HrApi_HostAddress}}/api/employees/3
+
+### Binding sources
+GET {{HrApi_HostAddress}}/api/employees/whoami?lang=ar
+X-Client-Version: 2.4.1
+
+### Unhandled exception -> 500 ProblemDetails
+GET {{HrApi_HostAddress}}/api/employees/boom
+
+### OpenAPI document
+GET {{HrApi_HostAddress}}/openapi/v1.json
+
+### ================= MINIMAL API (same endpoints, /api/minimal/...) =================
+
+### Ping (one-line endpoint)
+GET {{HrApi_HostAddress}}/ping
+
+### List
+GET {{HrApi_HostAddress}}/api/minimal/employees?department=mobile&pageSize=1
+
+### Bad paging -> 400
+GET {{HrApi_HostAddress}}/api/minimal/employees?page=0
+
+### Get one
+GET {{HrApi_HostAddress}}/api/minimal/employees/1
+
+### Create -> 201
+POST {{HrApi_HostAddress}}/api/minimal/employees
+Content-Type: application/json
+
+{ "name": "Mona", "email": "mona@corp.com", "department": "Design", "salary": 14000 }
+
+### Create invalid -> 400 (AddValidation)
+POST {{HrApi_HostAddress}}/api/minimal/employees
+Content-Type: application/json
+
+{ "name": "M", "email": "not-an-email", "department": "", "salary": 5 }
+
+### Update
+PUT {{HrApi_HostAddress}}/api/minimal/employees/2
+Content-Type: application/json
+
+{ "name": "Sara Ahmed", "department": "HR", "salary": 13000 }
+
+### Promote
+POST {{HrApi_HostAddress}}/api/minimal/employees/1/promote
+Content-Type: application/json
+
+{ "raisePercent": 10 }
+
+### Delete -> 204
+DELETE {{HrApi_HostAddress}}/api/minimal/employees/3
+
+### Binding sources
+GET {{HrApi_HostAddress}}/api/minimal/employees/whoami?lang=ar
+X-Client-Version: 2.4.1
