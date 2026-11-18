@@ -23,28 +23,67 @@ public class InMemoryEmployeeService : IEmployeeService
 {
     private readonly List<Employee> _db =
     [
-        new() { Id = 1, Name = "Ali",   Email = "ali@corp.com",   Department = "Mobile",  Salary = 15_000m, HiredOn = new(2023, 3, 1),  PasswordHash = "Admin@123" },
-        new() { Id = 2, Name = "Sara",  Email = "sara@corp.com",  Department = "HR",      Salary = 12_000m, HiredOn = new(2022, 7, 15), PasswordHash = "Admin@123" },
-        new() { Id = 3, Name = "Omar",  Email = "omar@corp.com",  Department = "Backend", Salary = 18_000m, HiredOn = new(2021, 1, 10), PasswordHash = "Admin@123" },
-        new() { Id = 4, Name = "Salma", Email = "salma@corp.com", Department = "Mobile",  Salary = 16_000m, HiredOn = new(2024, 9, 5),  PasswordHash = "Admin@123" },
+        new()
+        {
+            Id = 1, Name = "Ali", Email = "ali@corp.com", Department = "Mobile", Salary = 15_000m,
+            HiredOn = new(2023, 3, 1), PasswordHash = "Admin@123"
+        },
+        new()
+        {
+            Id = 2, Name = "Sara", Email = "sara@corp.com", Department = "HR", Salary = 12_000m,
+            HiredOn = new(2022, 7, 15), PasswordHash = "Admin@123"
+        },
+        new()
+        {
+            Id = 3, Name = "Omar", Email = "omar@corp.com", Department = "Backend", Salary = 18_000m,
+            HiredOn = new(2021, 1, 10), PasswordHash = "Admin@123"
+        },
+        new()
+        {
+            Id = 4, Name = "Salma", Email = "salma@corp.com", Department = "Mobile", Salary = 16_000m,
+            HiredOn = new(2024, 9, 5), PasswordHash = "Admin@123"
+        },
     ];
+
     private int _nextId = 5;
     private readonly Lock _gate = new();
 
-    public Task<PagedResponse<EmployeeResponse>> GetAllAsync(EmployeeQuery q, CancellationToken ct)
+    public Task<PagedResponse<EmployeeResponse>> GetAllAsync(
+        EmployeeQuery q, CancellationToken ct)
     {
         lock (_gate)
         {
             IEnumerable<Employee> rows = _db;
-            if (!string.IsNullOrWhiteSpace(q.Department))
-                rows = rows.Where(e => e.Department.Equals(q.Department, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(q.Search))
-                rows = rows.Where(e => e.Name.Contains(q.Search, StringComparison.OrdinalIgnoreCase));
 
-            var filtered = rows.ToList();
-            var page = filtered.Skip((q.Page - 1) * q.PageSize).Take(q.PageSize)
-                               .Select(e => e.ToResponse()).ToList();
-            return Task.FromResult(new PagedResponse<EmployeeResponse>(page, q.Page, q.PageSize, filtered.Count));
+            Func<Employee, bool> departmentCondition = e =>
+                string.IsNullOrWhiteSpace(q.Department) ||
+                e.Department.Equals(q.Department, StringComparison.OrdinalIgnoreCase);
+
+            Func<Employee, bool> searchCondition = e =>
+                string.IsNullOrWhiteSpace(q.Search) ||
+                e.Name.Contains(q.Search, StringComparison.OrdinalIgnoreCase);
+
+            Func<Employee, bool> salaryCondition = e =>
+                q.MinSalary == null ||
+                q.MinSalary <= 0 ||
+                e.Salary > q.MinSalary;
+
+            rows = rows
+                .Where(departmentCondition)
+                .Where(searchCondition)
+                .Where(salaryCondition);
+
+            var totalCount = rows.Count();
+
+            var page = rows
+                .Skip((q.Page - 1) * q.PageSize)
+                .Take(q.PageSize)
+                .Select(e => e.ToResponse())
+                .ToList();
+
+            return Task.FromResult(
+                new PagedResponse<EmployeeResponse>(q.Page, q.PageSize, totalCount,
+                    page));
         }
     }
 
@@ -75,7 +114,9 @@ public class InMemoryEmployeeService : IEmployeeService
             var e = _db.FirstOrDefault(x => x.Id == id);
             if (e is null) return Task.FromResult<EmployeeResponse?>(null);
             e.Name = r.Name;
-            e.Number = r.Number; e.Department = r.Department; e.Salary = r.Salary;
+            e.Number = r.Number;
+            e.Department = r.Department;
+            e.Salary = r.Salary;
             return Task.FromResult<EmployeeResponse?>(e.ToResponse());
         }
     }

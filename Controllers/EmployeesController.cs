@@ -63,7 +63,7 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CountResponse>> GetEmployeesCount(CancellationToken ct)
     {
-        var query = new EmployeeQuery(Department: null, Search: null, Page: 1, PageSize: 1);
+        var query = new EmployeeQuery();
         var result = await service.GetAllAsync(query, ct);
         return new CountResponse(result.Total);
     }

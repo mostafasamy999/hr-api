@@ -32,7 +32,7 @@ public static class EmployeeEndpoints
     public static IEndpointRouteBuilder MapEmployeeEndpoints(this IEndpointRouteBuilder app)
     {
         // MapGroup = shared prefix + shared settings for every endpoint inside (like a controller class)
-        var group = app.MapGroup("/api/minimal/employees")
+        var group = app.MapGroup("/api/v2/employees")
             .WithTags("Employees (Minimal)")             // grouping in OpenAPI docs
             .AddEndpointFilter<TimingEndpointFilter>();  // runs around EVERY endpoint in the group
 
@@ -91,7 +91,7 @@ public static class EmployeeEndpoints
     static async Task<Results<Ok<CountResponse>, NotFound>> GetCount(
         IEmployeeService service, CancellationToken ct)
     {
-        var query = new EmployeeQuery(null, null, 1, 1);
+        var query = new EmployeeQuery();
         var result = await service.GetAllAsync(query, ct);
         return TypedResults.Ok(new CountResponse(result.Total));
     }
