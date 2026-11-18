@@ -74,7 +74,8 @@ public class InMemoryEmployeeService : IEmployeeService
         {
             var e = _db.FirstOrDefault(x => x.Id == id);
             if (e is null) return Task.FromResult<EmployeeResponse?>(null);
-            e.Name = r.Name; e.Department = r.Department; e.Salary = r.Salary;
+            e.Name = r.Name;
+            e.Number = r.Number; e.Department = r.Department; e.Salary = r.Salary;
             return Task.FromResult<EmployeeResponse?>(e.ToResponse());
         }
     }

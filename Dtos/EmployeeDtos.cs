@@ -16,6 +16,7 @@ public record CreateEmployeeRequest(
 
 public record UpdateEmployeeRequest(
     [Required, StringLength(50, MinimumLength = 2)] string Name,
+    string Number,
     [Required] string Department,
     [Range(1_000, 1_000_000)] decimal Salary);
 
@@ -23,7 +24,7 @@ public record PromoteRequest([Range(1, 100)] int RaisePercent, string? NewDepart
 
 // ---------- what the API RETURNS ----------
 // No PasswordHash. Salary is included here, but you could make a separate "public" DTO without it.
-public record EmployeeResponse(int Id, string Name, string Email, string Department, decimal Salary, DateOnly HiredOn);
+public record EmployeeResponse(int Id, string Name, string Number, string Email, string Department, decimal Salary, DateOnly HiredOn);
 
 public record PagedResponse<T>(IReadOnlyList<T> Items, int Page, int PageSize, int Total)
 {
@@ -38,5 +39,5 @@ public record EmployeeQuery(string? Department, string? Search, int Page = 1, in
 public static class EmployeeMappings
 {
     public static EmployeeResponse ToResponse(this Employee e) =>
-        new(e.Id, e.Name, e.Email, e.Department, e.Salary, e.HiredOn);
+        new(e.Id, e.Name, e.Number,e.Email, e.Department, e.Salary, e.HiredOn);
 }
