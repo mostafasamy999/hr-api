@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-using HrApi.Application.Common.Extensions;
 using HrApi.Dtos;
 using HrApi.Models;
 
@@ -55,55 +53,16 @@ public class InMemoryEmployeeService : IEmployeeService
     {
         lock (_gate)
         {
-            IQueryable<Employee> rows = _db.AsQueryable();
+            var filtered = _db.AsQueryable().ApplyFilters(q);
+            var total = filtered.Count();
 
-            // filter
-            Expression<Func<Employee, bool>> departmentCondition = e =>
-                string.IsNullOrWhiteSpace(q.Department) ||
-                e.Department.Equals(q.Department, StringComparison.OrdinalIgnoreCase);
-
-            Expression<Func<Employee, bool>> searchCondition = e =>
-                string.IsNullOrWhiteSpace(q.Search) ||
-                e.Name.Contains(q.Search, StringComparison.OrdinalIgnoreCase);
-
-            Expression<Func<Employee, bool>> salaryCondition = e =>
-                q.MinSalary == null ||
-                q.MinSalary <= 0 ||
-                e.Salary > q.MinSalary;
-
-            rows = rows
-                .Where(departmentCondition)
-                .Where(searchCondition)
-                .Where(salaryCondition);
-
-            var totalCount = rows.Count();
-
-            // sort 
-            bool? isAse = q.sortType?.ToLower() switch
-            {
-                "asc" => true,
-                "desc" => false,
-                _ => null
-            };
-            
-            rows = q.sortedBy?.ToLower() switch
-            {
-                "salary" => rows.SortBy(isAse,e => e.Salary),
-                "department" => rows.SortBy(isAse, e=> e.Department),
-                "name" => rows.SortBy(isAse,e => e.Name),
-                _ => rows
-            };
-
-            // pagination
-            var page = rows
-                .Skip((q.Page - 1) * q.PageSize)
-                .Take(q.PageSize)
+            var items = filtered
+                .ApplySort(q)
+                .ApplyPaging(q.Page, q.PageSize)
                 .Select(e => e.ToResponse())
                 .ToList();
 
-            return Task.FromResult(
-                new PagedResponse<EmployeeResponse>(totalCount,
-                    page, q.Page, q.PageSize));
+            return Task.FromResult(new PagedResponse<EmployeeResponse>(total, items, q.Page, q.PageSize));
         }
     }
     public Task<EmployeeResponse?> GetByIdAsync(int id, CancellationToken ct)
