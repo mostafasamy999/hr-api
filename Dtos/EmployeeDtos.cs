@@ -37,7 +37,7 @@ public record EmployeeResponse(
 
 public record CountResponse(int Count);
 
-public record PagedResponse<T>(int Page, int PageSize, int Total, IReadOnlyList<T> Items)
+public record PagedResponse<T>(int Total, IReadOnlyList<T> Items, int Page, int PageSize)
 {
     public int TotalPages => (int)Math.Ceiling(Total / (double)PageSize);
 }
@@ -48,6 +48,8 @@ public record EmployeeQuery(
     string? Department = null,
     string? Search = null,
     int? MinSalary = null,
+    string? sortedBy = null,
+    string? sortType = null,
     int Page = 1,
     int PageSize = 10);
 
