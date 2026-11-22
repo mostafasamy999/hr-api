@@ -9,7 +9,7 @@ public class Employee
     public string Name { get; set; } = "";
     public string Email { get; set; } = "";
     public string Number { get; set; } = "";
-    public string Department { get; set; } = "";
+    public int DepartmentId { get; set; }
     public decimal Salary { get; set; }
     public DateOnly HiredOn { get; set; }
     public string PasswordHash { get; set; } = "";

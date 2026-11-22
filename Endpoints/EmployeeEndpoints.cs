@@ -42,7 +42,6 @@ public static class EmployeeEndpoints
         group.MapPost("/", Create);
         group.MapPut("/{id:int}", Update);
         group.MapDelete("/{id:int}", Delete);
-        group.MapPost("/{id:int}/promote", Promote);
         group.MapGet("/count", GetCount);
         
         // Small endpoints can be inline lambdas. Parameters are bound by convention:
@@ -110,7 +109,7 @@ public static class EmployeeEndpoints
     // POST /api/minimal/employees
     // ------------------------------------------------------------
     // The body is validated by AddValidation() BEFORE this runs (same attributes on the record).
-    static async Task<Results<CreatedAtRoute<EmployeeResponse>, Conflict<ProblemDetails>>> Create(
+    static async Task<Results<CreatedAtRoute<EmployeeResponse>, Conflict<ProblemDetails>, ValidationProblem>> Create(
         CreateEmployeeRequest request, IEmployeeService service, ILoggerFactory loggers, CancellationToken ct)
     {
         if (await service.EmailExistsAsync(request.Email, ct))
@@ -120,7 +119,11 @@ public static class EmployeeEndpoints
                 Detail = $"An employee with email '{request.Email}' already exists.",
                 Status = StatusCodes.Status409Conflict,
             });
-
+        if (!await service.DepartmentExistsAsync(request.DepartmentId, ct))
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                [nameof(request.DepartmentId)] = [$"Department with id {request.DepartmentId} does not exist."]
+            });
         var created = await service.CreateAsync(request, ct);
         loggers.CreateLogger("EmployeeEndpoints").LogInformation("Created employee {Id}", created.Id);
         return TypedResults.CreatedAtRoute(created, GetByIdRoute, new { id = created.Id });
@@ -140,15 +143,7 @@ public static class EmployeeEndpoints
     // ------------------------------------------------------------
     static async Task<Results<NoContent, NotFound>> Delete(int id, IEmployeeService service, CancellationToken ct) =>
         await service.DeleteAsync(id, ct) ? TypedResults.NoContent() : TypedResults.NotFound();
-
-    // ------------------------------------------------------------
-    // POST /api/minimal/employees/5/promote
-    // ------------------------------------------------------------
-    static async Task<Results<Ok<EmployeeResponse>, NotFound>> Promote(
-        int id, PromoteRequest request, IEmployeeService service, CancellationToken ct) =>
-        await service.PromoteAsync(id, request, ct) is { } promoted
-            ? TypedResults.Ok(promoted)
-            : TypedResults.NotFound();
+    
 }
 
 // ENDPOINT FILTER = the Minimal API version of an action filter.

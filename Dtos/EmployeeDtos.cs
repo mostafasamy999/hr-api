@@ -12,16 +12,15 @@ public record CreateEmployeeRequest(
     [Required, StringLength(50, MinimumLength = 2)]
     string Name,
     [Required, EmailAddress] string Email,
-    [Required, AllowedValues("Mobile", "HR", "Backend", "Design", ErrorMessage = Departments.ErrorMessage)]
-    string Department,
+    [Required]
+    int DepartmentId,
     [Range(1_000, 1_000_000)] decimal Salary);
 
 public record UpdateEmployeeRequest(
     [Required, StringLength(50, MinimumLength = 2)]
     string Name,
     string Number,
-    [Required, AllowedValues("Mobile", "HR", "Backend", "Design", ErrorMessage = Departments.ErrorMessage)]
-    string Department,
+    int DepartmentId,
     [Range(1_000, 1_000_000)] decimal Salary);
 
 // NewDepartment is optional, so null is in the allowed list too.
@@ -43,10 +42,17 @@ public record EmployeeResponse(
     string Name,
     string Number,
     string Email,
-    string Department,
+    int DepartmentId,
     decimal Salary,
     DateOnly HiredOn);
+public record DepartmentResponse(
+    List<Department> DepartmentsList);
 
+public static class DepartmentMappings
+{
+    public static DepartmentResponse ToResponse(this List<Department> list) =>
+        new DepartmentResponse(list);
+}
 public record CountResponse(int Count);
 
 public record PagedResponse<T>(int Total, IReadOnlyList<T> Items, int Page, int PageSize)
@@ -57,7 +63,7 @@ public record PagedResponse<T>(int Total, IReadOnlyList<T> Items, int Page, int 
 // ---------- query-string parameters grouped in one object ----------
 // GET /api/employees?department=Mobile&search=al&page=1&pageSize=10
 public record EmployeeQuery(
-    string? Department = null,
+    int? DepartmentId = null,
     string? Search = null,
     int? MinSalary = null,
     string? sortedBy = null,
@@ -69,5 +75,5 @@ public record EmployeeQuery(
 public static class EmployeeMappings
 {
     public static EmployeeResponse ToResponse(this Employee e) =>
-        new(e.Id, e.Name, e.Number, e.Email, e.Department, e.Salary, e.HiredOn);
+        new(e.Id, e.Name, e.Number, e.Email, e.DepartmentId, e.Salary, e.HiredOn);
 }

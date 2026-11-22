@@ -87,7 +87,12 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
                 Detail = $"An employee with email '{request.Email}' already exists.",
                 Status = StatusCodes.Status409Conflict,
             });
-
+        if (!await service.DepartmentExistsAsync(request.DepartmentId, ct))
+        {
+            ModelState.AddModelError(nameof(request.DepartmentId),
+                $"Department with id {request.DepartmentId} does not exist.");
+            return ValidationProblem(ModelState);
+        }
         var created = await service.CreateAsync(request, ct);
         logger.LogInformation("Created employee {Id}", created.Id);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -102,6 +107,12 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     public async Task<ActionResult<EmployeeResponse>> Update(int id, UpdateEmployeeRequest request,
         CancellationToken ct)
     {
+        if (!await service.DepartmentExistsAsync(request.DepartmentId, ct))
+        {
+            ModelState.AddModelError(nameof(request.DepartmentId),
+                $"Department with id {request.DepartmentId} does not exist.");
+            return ValidationProblem(ModelState);
+        }
         var updated = await service.UpdateAsync(id, request, ct);
         return updated is null ? NotFound() : Ok(updated);
     }
@@ -115,16 +126,6 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id, CancellationToken ct) =>
         await service.DeleteAsync(id, ct) ? NoContent() : NotFound();
-
-    // ------------------------------------------------------------
-    // POST /api/employees/5/promote     (a custom ACTION, not plain CRUD)
-    // ------------------------------------------------------------
-    [HttpPost("{id:int}/promote")]
-    public async Task<ActionResult<EmployeeResponse>> Promote(int id, PromoteRequest request, CancellationToken ct)
-    {
-        var promoted = await service.PromoteAsync(id, request, ct);
-        return promoted is null ? NotFound() : Ok(promoted);
-    }
 
     // ------------------------------------------------------------
     // GET /api/employees/whoami      (all the binding sources in one place)

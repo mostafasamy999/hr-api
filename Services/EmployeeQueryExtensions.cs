@@ -12,8 +12,8 @@ public static class EmployeeQueryExtensions
     public static IQueryable<Employee> ApplyFilters(this IQueryable<Employee> rows, EmployeeQuery q)
     {
         Expression<Func<Employee, bool>> departmentCondition = e =>
-            string.IsNullOrWhiteSpace(q.Department) ||
-            e.Department.Equals(q.Department, StringComparison.OrdinalIgnoreCase);
+            q.DepartmentId == null ||
+            e.DepartmentId == q.DepartmentId;
 
         Expression<Func<Employee, bool>> searchCondition = e =>
             string.IsNullOrWhiteSpace(q.Search) ||
@@ -38,7 +38,7 @@ public static class EmployeeQueryExtensions
         return q.sortedBy?.ToLowerInvariant() switch
         {
             "salary" => rows.SortBy(isAsc, e => e.Salary),
-            "department" => rows.SortBy(isAsc, e => e.Department),
+            "department" => rows.SortBy(isAsc, e => e.DepartmentId),
             "name" => rows.SortBy(isAsc, e => e.Name),
             _ => rows.OrderBy(e => e.Id) // stable default so pages never shuffle
         };
