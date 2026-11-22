@@ -12,17 +12,29 @@ public record CreateEmployeeRequest(
     [Required, StringLength(50, MinimumLength = 2)]
     string Name,
     [Required, EmailAddress] string Email,
-    [Required] string Department,
+    [Required, AllowedValues("Mobile", "HR", "Backend", "Design", ErrorMessage = Departments.ErrorMessage)]
+    string Department,
     [Range(1_000, 1_000_000)] decimal Salary);
 
 public record UpdateEmployeeRequest(
     [Required, StringLength(50, MinimumLength = 2)]
     string Name,
     string Number,
-    [Required] string Department,
+    [Required, AllowedValues("Mobile", "HR", "Backend", "Design", ErrorMessage = Departments.ErrorMessage)]
+    string Department,
     [Range(1_000, 1_000_000)] decimal Salary);
 
-public record PromoteRequest([Range(1, 100)] int RaisePercent, string? NewDepartment);
+// NewDepartment is optional, so null is in the allowed list too.
+public record PromoteRequest(
+    [Range(1, 100)] int RaisePercent,
+    [AllowedValues("Mobile", "HR", "Backend", "Design", null, ErrorMessage = Departments.ErrorMessage)]
+    string? NewDepartment);
+
+// Attribute arguments must be compile-time constants, so the message lives in a const.
+public static class Departments
+{
+    public const string ErrorMessage = "Department must be one of: Mobile, HR, Backend, Design.";
+}
 
 // ---------- what the API RETURNS ----------
 // No PasswordHash. Salary is included here, but you could make a separate "public" DTO without it.
