@@ -128,6 +128,33 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
         await service.DeleteAsync(id, ct) ? NoContent() : NotFound();
 
     // ------------------------------------------------------------
+    // POST /api/employees/5/promote     (a custom ACTION, not plain CRUD)
+    // ------------------------------------------------------------
+    // The service applies the business rules; here we only map each result to an HTTP status.
+    [HttpPost("{id:int}/promote")]
+    [ProducesResponseType<EmployeeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<ActionResult<EmployeeResponse>> Promote(int id, PromoteRequest request, CancellationToken ct)
+    {
+        var result = await service.PromoteAsync(id, request, ct);
+        switch (result.Status)
+        {
+            case PromoteStatus.Success:
+                return Ok(result.Employee);
+            case PromoteStatus.EmployeeNotFound:
+                return NotFound();
+            case PromoteStatus.DepartmentNotFound:
+                ModelState.AddModelError(nameof(request.NewDepartmentId), result.Error!);
+                return ValidationProblem(ModelState);
+            default: // RaiseTooHigh
+                return Problem(title: "Promotion not allowed", detail: result.Error,
+                    statusCode: StatusCodes.Status422UnprocessableEntity);
+        }
+    }
+
+    // ------------------------------------------------------------
     // GET /api/employees/whoami      (all the binding sources in one place)
     // ------------------------------------------------------------
     //   [FromRoute]    /api/employees/{id}

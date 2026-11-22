@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using HrApi.Dtos;
 using HrApi.Models;
-using Departments = HrApi.Dtos.Departments;
 
 namespace HrApi.Services;
 
@@ -15,6 +14,7 @@ public interface IEmployeeService
     Task<EmployeeResponse> CreateAsync(CreateEmployeeRequest request, CancellationToken ct);
     Task<EmployeeResponse?> UpdateAsync(int id, UpdateEmployeeRequest request, CancellationToken ct);
     Task<bool> DeleteAsync(int id, CancellationToken ct);
+    Task<PromoteResult> PromoteAsync(int id, PromoteRequest request, CancellationToken ct);
     Task<bool> EmailExistsAsync(string email, CancellationToken ct);
 
     public Task<bool> DepartmentExistsAsync(int departmentId, CancellationToken ct);
@@ -113,6 +113,34 @@ public class InMemoryEmployeeService : IEmployeeService
     public Task<bool> DeleteAsync(int id, CancellationToken ct)
     {
         lock (_gate) return Task.FromResult(_employeesDb.RemoveAll(e => e.Id == id) > 0);
+    }
+
+    // BUSINESS RULE: lives here, not in an attribute. [Range(1, 100)] on the DTO only checks
+    // the SHAPE of the input ("is it a sane percent?"). "Max 50%" is a company policy: it can
+    // change, depend on role or data, and must hold for every caller (controller, minimal API, tests).
+    public const int MaxRaisePercent = 50;
+
+    public Task<PromoteResult> PromoteAsync(int id, PromoteRequest r, CancellationToken ct)
+    {
+        lock (_gate)
+        {
+            var e = _employeesDb.FirstOrDefault(x => x.Id == id);
+            if (e is null)
+                return Task.FromResult(PromoteResult.Fail(PromoteStatus.EmployeeNotFound,
+                    $"Employee with id {id} does not exist."));
+
+            if (r.RaisePercent > MaxRaisePercent)
+                return Task.FromResult(PromoteResult.Fail(PromoteStatus.RaiseTooHigh,
+                    $"A promotion raise can be at most {MaxRaisePercent}%. You asked for {r.RaisePercent}%."));
+
+            if (r.NewDepartmentId is { } depId && _departmentsDb.All(d => d.Id != depId))
+                return Task.FromResult(PromoteResult.Fail(PromoteStatus.DepartmentNotFound,
+                    $"Department with id {depId} does not exist."));
+
+            e.Salary = Math.Round(e.Salary * (1 + r.RaisePercent / 100m), 2);
+            if (r.NewDepartmentId is { } newDep) e.DepartmentId = newDep;
+            return Task.FromResult(PromoteResult.Ok(e.ToResponse()));
+        }
     }
     
 

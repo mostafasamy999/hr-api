@@ -44,7 +44,13 @@ Content-Type: application/json
 POST {{HrApi_HostAddress}}/api/employees/1/promote
 Content-Type: application/json
 
-{ "raisePercent": 10, "newDepartment": "Team Lead" }
+{ "raisePercent": 10, "newDepartmentId": 2 }
+
+### Promote above 50% -> 422 (business rule in the service)
+POST {{HrApi_HostAddress}}/api/employees/1/promote
+Content-Type: application/json
+
+{ "raisePercent": 60 }
 
 ### Delete -> 204
 DELETE {{HrApi_HostAddress}}/api/employees/3

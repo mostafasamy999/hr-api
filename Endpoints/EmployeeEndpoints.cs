@@ -42,6 +42,7 @@ public static class EmployeeEndpoints
         group.MapPost("/", Create);
         group.MapPut("/{id:int}", Update);
         group.MapDelete("/{id:int}", Delete);
+        group.MapPost("/{id:int}/promote", Promote);
         group.MapGet("/count", GetCount);
         
         // Small endpoints can be inline lambdas. Parameters are bound by convention:
@@ -143,7 +144,27 @@ public static class EmployeeEndpoints
     // ------------------------------------------------------------
     static async Task<Results<NoContent, NotFound>> Delete(int id, IEmployeeService service, CancellationToken ct) =>
         await service.DeleteAsync(id, ct) ? TypedResults.NoContent() : TypedResults.NotFound();
-    
+
+    // ------------------------------------------------------------
+    // POST /api/v2/employees/5/promote
+    // ------------------------------------------------------------
+    // Same service, same rules -> same status codes as the controller.
+    static async Task<Results<Ok<EmployeeResponse>, NotFound, ValidationProblem, ProblemHttpResult>> Promote(
+        int id, PromoteRequest request, IEmployeeService service, CancellationToken ct)
+    {
+        var result = await service.PromoteAsync(id, request, ct);
+        return result.Status switch
+        {
+            PromoteStatus.Success => TypedResults.Ok(result.Employee!),
+            PromoteStatus.EmployeeNotFound => TypedResults.NotFound(),
+            PromoteStatus.DepartmentNotFound => TypedResults.ValidationProblem(new Dictionary<string, string[]>
+            {
+                [nameof(request.NewDepartmentId)] = [result.Error!],
+            }),
+            _ => TypedResults.Problem(title: "Promotion not allowed", detail: result.Error,
+                statusCode: StatusCodes.Status422UnprocessableEntity),
+        };
+    }
 }
 
 // ENDPOINT FILTER = the Minimal API version of an action filter.

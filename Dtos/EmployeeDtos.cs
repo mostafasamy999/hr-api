@@ -23,17 +23,11 @@ public record UpdateEmployeeRequest(
     int DepartmentId,
     [Range(1_000, 1_000_000)] decimal Salary);
 
-// NewDepartment is optional, so null is in the allowed list too.
+// [Range(1, 100)] checks only the SHAPE (a sane percent). The "max 50%" business rule is in the service.
+// NewDepartmentId is optional (null = stay in the same department); the service checks it exists.
 public record PromoteRequest(
     [Range(1, 100)] int RaisePercent,
-    [AllowedValues("Mobile", "HR", "Backend", "Design", null, ErrorMessage = Departments.ErrorMessage)]
-    string? NewDepartment);
-
-// Attribute arguments must be compile-time constants, so the message lives in a const.
-public static class Departments
-{
-    public const string ErrorMessage = "Department must be one of: Mobile, HR, Backend, Design.";
-}
+    int? NewDepartmentId);
 
 // ---------- what the API RETURNS ----------
 // No PasswordHash. Salary is included here, but you could make a separate "public" DTO without it.
