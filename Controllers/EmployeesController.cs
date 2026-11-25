@@ -23,7 +23,10 @@ namespace HrApi.Controllers;
 [Route("api/[controller]")]
 [Produces("application/json")]
 [ServiceFilter(typeof(TimingFilter))] // runs before/after EVERY action in this class
-public class EmployeesController(IEmployeeService service, ILogger<EmployeesController> logger) : ControllerBase
+public class EmployeesController(
+    IEmployeeService service,
+    IDepartmentLookup departments, // only the small interface it needs (ISP)
+    ILogger<EmployeesController> logger) : ControllerBase
 {
     // ↑ primary constructor (C# 12): DI injects IEmployeeService and ILogger automatically.
     //   A NEW controller instance is created for EVERY request.
@@ -87,7 +90,7 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
                 Detail = $"An employee with email '{request.Email}' already exists.",
                 Status = StatusCodes.Status409Conflict,
             });
-        if (!await service.DepartmentExistsAsync(request.DepartmentId, ct))
+        if (!await departments.ExistsAsync(request.DepartmentId, ct))
         {
             ModelState.AddModelError(nameof(request.DepartmentId),
                 $"Department with id {request.DepartmentId} does not exist.");
@@ -107,7 +110,7 @@ public class EmployeesController(IEmployeeService service, ILogger<EmployeesCont
     public async Task<ActionResult<EmployeeResponse>> Update(int id, UpdateEmployeeRequest request,
         CancellationToken ct)
     {
-        if (!await service.DepartmentExistsAsync(request.DepartmentId, ct))
+        if (!await departments.ExistsAsync(request.DepartmentId, ct))
         {
             ModelState.AddModelError(nameof(request.DepartmentId),
                 $"Department with id {request.DepartmentId} does not exist.");

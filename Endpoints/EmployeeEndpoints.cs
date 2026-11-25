@@ -111,7 +111,8 @@ public static class EmployeeEndpoints
     // ------------------------------------------------------------
     // The body is validated by AddValidation() BEFORE this runs (same attributes on the record).
     static async Task<Results<CreatedAtRoute<EmployeeResponse>, Conflict<ProblemDetails>, ValidationProblem>> Create(
-        CreateEmployeeRequest request, IEmployeeService service, ILoggerFactory loggers, CancellationToken ct)
+        CreateEmployeeRequest request, IEmployeeService service, IDepartmentLookup departments,
+        ILoggerFactory loggers, CancellationToken ct)
     {
         if (await service.EmailExistsAsync(request.Email, ct))
             return TypedResults.Conflict(new ProblemDetails
@@ -120,7 +121,7 @@ public static class EmployeeEndpoints
                 Detail = $"An employee with email '{request.Email}' already exists.",
                 Status = StatusCodes.Status409Conflict,
             });
-        if (!await service.DepartmentExistsAsync(request.DepartmentId, ct))
+        if (!await departments.ExistsAsync(request.DepartmentId, ct))
             return TypedResults.ValidationProblem(new Dictionary<string, string[]>
             {
                 [nameof(request.DepartmentId)] = [$"Department with id {request.DepartmentId} does not exist."]

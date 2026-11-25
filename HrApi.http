@@ -65,6 +65,47 @@ GET {{HrApi_HostAddress}}/api/employees/boom
 ### OpenAPI document
 GET {{HrApi_HostAddress}}/openapi/v1.json
 
+### ================= DEPARTMENTS (/api/departments) =================
+
+### List departments (with employee count)
+GET {{HrApi_HostAddress}}/api/departments
+
+### Get one
+GET {{HrApi_HostAddress}}/api/departments/2
+
+### Not found -> 404
+GET {{HrApi_HostAddress}}/api/departments/999
+
+### Create -> 201 + Location header
+POST {{HrApi_HostAddress}}/api/departments
+Content-Type: application/json
+
+{ "name": "Design" }
+
+### Create invalid -> automatic 400 (validation)
+POST {{HrApi_HostAddress}}/api/departments
+Content-Type: application/json
+
+{ "name": "D" }
+
+### Duplicate name (case-insensitive) -> 409
+POST {{HrApi_HostAddress}}/api/departments
+Content-Type: application/json
+
+{ "name": "backend" }
+
+### Rename
+PUT {{HrApi_HostAddress}}/api/departments/2
+Content-Type: application/json
+
+{ "name": "Platform" }
+
+### Delete a department that still has employees -> 409
+DELETE {{HrApi_HostAddress}}/api/departments/3
+
+### Delete an empty department -> 204 (create "Design" first, it gets id 4)
+DELETE {{HrApi_HostAddress}}/api/departments/4
+
 ### ================= MINIMAL API (same endpoints, /api/minimal/...) =================
 
 ### Ping (one-line endpoint)

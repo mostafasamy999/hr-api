@@ -39,14 +39,6 @@ public record EmployeeResponse(
     int DepartmentId,
     decimal Salary,
     DateOnly HiredOn);
-public record DepartmentResponse(
-    List<Department> DepartmentsList);
-
-public static class DepartmentMappings
-{
-    public static DepartmentResponse ToResponse(this List<Department> list) =>
-        new DepartmentResponse(list);
-}
 public record CountResponse(int Count);
 
 public record PagedResponse<T>(int Total, IReadOnlyList<T> Items, int Page, int PageSize)

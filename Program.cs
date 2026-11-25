@@ -21,7 +21,14 @@ builder.Services.AddProblemDetails();          // standard JSON shape for errors
 //   AddSingleton -> ONE instance for the whole app        (our in-memory "DB" must survive between requests)
 //   AddScoped    -> one instance PER HTTP REQUEST          (typical for EF Core DbContext / real services)
 //   AddTransient -> a NEW instance every time it's injected (small stateless helpers)
+builder.Services.AddSingleton<HrDataStore>();  // the shared in-memory "DB" (one for the whole app)
 builder.Services.AddSingleton<IEmployeeService, InMemoryEmployeeService>();
+builder.Services.AddSingleton<InMemoryDepartmentService>();
+// ONE department service instance, exposed through TWO interfaces (ISP):
+//   IDepartmentService -> full CRUD (DepartmentsController)
+//   IDepartmentLookup  -> only "does it exist?" (EmployeesController, minimal endpoints)
+builder.Services.AddSingleton<IDepartmentService>(sp => sp.GetRequiredService<InMemoryDepartmentService>());
+builder.Services.AddSingleton<IDepartmentLookup>(sp => sp.GetRequiredService<InMemoryDepartmentService>());
 builder.Services.AddScoped<TimingFilter>();    // needed for [ServiceFilter(typeof(TimingFilter))]
 
 var app = builder.Build();
@@ -38,7 +45,7 @@ if (app.Environment.IsDevelopment())
 // app.UseHttpsRedirection();                  // enable when you run with the https profile
 app.UseAuthorization();
 
-app.MapControllers();                          // CONTROLLERS: connect [Route]/[HttpGet]... to URLs  -> /api/employees
+app.MapControllers();                          // CONTROLLERS: connect [Route]/[HttpGet]... to URLs  -> /api/employees, /api/departments
 app.MapEmployeeEndpoints();                    // MINIMAL API: Endpoints/EmployeeEndpoints.cs         -> /api/minimal/employees
 
 // The smallest possible Minimal API endpoint — one line, no class at all:

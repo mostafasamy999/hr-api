@@ -42,6 +42,16 @@ Base URL: `http://localhost:5206`
 | GET | `/api/employees/whoami` |
 | GET | `/api/employees/boom` |
 
+### Departments (Controller)
+
+| Method | URL | Notes |
+|---|---|---|
+| GET | `/api/departments` | includes `employeeCount` |
+| GET | `/api/departments/{id}` | |
+| POST | `/api/departments` | 409 if the name is already used |
+| PUT | `/api/departments/{id}` | 409 if the name is already used |
+| DELETE | `/api/departments/{id}` | 409 if the department still has employees |
+
 ### Minimal API
 
 | Method | URL |
